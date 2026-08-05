@@ -131,9 +131,10 @@ class StickVM:
         self._on_line = on_line
         self.mem_bytes = image.mem_kb * 1024
         self.frames: list[_Frame] = []
-        self.adapt_mode = 0  # 0 off, 1 universal, 2 chameleon
+        self.adapt_mode = 0  # 0 off/settle, 1 universal, 2 chameleon
         self.apps_run: list[str] = []
         self._app_queue: list[str] = []
+        self._chameleon_followup_done = False
 
     def _emit(self, line: str) -> None:
         self.output.append(line)
@@ -196,6 +197,36 @@ class StickVM:
             return
         code, strings = unpack_app(data)
         self._enter_app(name, code, strings)
+
+    def _sense_circumstances(self) -> int:
+        """Choose adapt phase from live stick circumstances (not a fixed script)."""
+        apps = sorted(n for n in self.files if n.endswith(".app"))
+        n = len(apps)
+        used = len(self.code) + sum(len(v) for v in self.files.values())
+        free = max(0, self.mem_bytes - used)
+        ran = len(self.apps_run)
+        unique_ran = len(set(self.apps_run))
+
+        if n == 0:
+            mode, reason = 0, "no apps → idle"
+        elif ran == 0:
+            # First decision: load + memory pressure pick the phase
+            if n >= 3 or free < 35_000:
+                mode, reason = 2, "heavy load/mem pressure → chameleon"
+            else:
+                mode, reason = 1, "light load → universal"
+        elif unique_ran < n:
+            mode, reason = 2, "unseen apps remain → chameleon"
+        elif self.adapt_mode >= 2 and not self._chameleon_followup_done:
+            self._chameleon_followup_done = True
+            mode, reason = 2, "chameleon follow-up pass under prior load"
+        else:
+            mode, reason = 0, "circumstances settled"
+
+        self._emit(
+            f"sense: apps={n} free={free} ran={ran} → mode={mode} ({reason})"
+        )
+        return mode
 
     def _run_all_apps(self) -> None:
         names = sorted(n for n in self.files if n.endswith(".app"))
@@ -416,10 +447,16 @@ class StickVM:
         if op == 0x26:  # ADAPT
             mode = self._pop()
             self.adapt_mode = int(mode)
-            labels = {0: "off", 1: "universal", 2: "chameleon"}
-            self._emit(f"adapt: mode={self.adapt_mode} ({labels.get(self.adapt_mode, 'custom')})")
+            labels = {0: "settle/idle", 1: "universal", 2: "chameleon"}
+            self._emit(
+                f"adapt: mode={self.adapt_mode} ({labels.get(self.adapt_mode, 'custom')}) "
+                f"[from circumstances]"
+            )
             if self.adapt_mode >= 2:
-                self._emit("adapt: chameleon armed — will re-scan apps")
+                self._emit("adapt: chameleon armed — phases follow circumstances")
+            return True
+        if op == 0x27:  # SENSE
+            self._push(self._sense_circumstances())
             return True
 
         raise RuntimeError(f"illegal opcode 0x{op:02x} at {self.pc - 1}")

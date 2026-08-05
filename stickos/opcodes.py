@@ -42,7 +42,8 @@ OPS: dict[str, int] = {
     "SYS": 0x23,
     "RUN": 0x24,  # u16 string idx → run .app
     "RUNALL": 0x25,  # run every *.app
-    "ADAPT": 0x26,  # pop mode (0/1/2)
+    "ADAPT": 0x26,  # pop mode (0/1/2) or apply sensed phase
+    "SENSE": 0x27,  # push recommended adapt mode from circumstances
 }
 
 OP_NAME = {v: k for k, v in OPS.items()}
@@ -103,4 +104,7 @@ ENGLISH: dict[str, str] = {
     "run": "RUN",
     "runall": "RUNALL",
     "adapt": "ADAPT",
+    "sense": "SENSE",
+    "circumstance": "SENSE",
+    "circumstances": "SENSE",
 }

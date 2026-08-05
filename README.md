@@ -38,17 +38,20 @@ halt
 
 Words include: `put`, `set`, `get`, `say`, `says`, `add`, `sub`, `mul`, `div`, `less`, `le`, `jz`, `jnz`, `list`, `mem`, `tick`, `sys`, `halt`, …
 
-## Run anything + adapt
+## Circumstance-driven phases
 
-Drop any `.say` program into `stickos/rom/apps/`. On boot StickOS compiles them to
-`.app` blobs, enters **universal** mode (`adapt 1` + `runall`), then **chameleon**
-mode (`adapt 2` + `runall` again) so newly added apps are picked up.
+Boot does not hardcode adapt 1 then 2. It **`sense`s** the stick and picks a phase:
+
+| Circumstance | Phase |
+|--------------|--------|
+| 0 apps | idle (0) |
+| 1–2 apps, roomy mem | universal (1) |
+| 3+ apps or low mem | chameleon (2) + follow-up pass |
+| All apps covered | settle (0) |
 
 ```bash
 python3 run_anything.py
 ```
-
-New opcodes: `run "x.app"`, `runall`, `adapt`.
 
 
 StickOS is meant to run on **StickCPU** inside the pendrive. The host USB port

@@ -59,10 +59,12 @@ def assert_uart_autonomous(lines: list[str]) -> list[str]:
     joined = "\n".join(lines)
     if "POWER: VBUS only" not in joined:
         errors.append("missing VBUS autonomy banner from firmware")
-    if "StickOS ready" not in joined:
+    if "StickOS ready" not in joined and "phases adapted to circumstances" not in joined:
         errors.append("firmware did not reach ready state")
     if "self-test: PASS" not in joined:
         errors.append("firmware self-test did not pass")
+    if "sense:" not in joined:
+        errors.append("firmware did not sense circumstances")
     if "--- halt: halt" not in joined:
         errors.append("firmware did not halt cleanly")
     return errors

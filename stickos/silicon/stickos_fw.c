@@ -71,6 +71,8 @@ typedef struct {
     int halted;
     char halt_reason[64];
     int adapt_mode;
+    int chameleon_followup_done;
+    int apps_run_count;
     Frame frames[MAX_FRAMES];
     int fp;
     char appq[MAX_APPQ][MAX_NAME];
@@ -280,6 +282,7 @@ static void leave_app(CPU *cpu) {
     cpu->csp = fr->csp;
     memcpy(cpu->stack, fr->stack, sizeof(cpu->stack));
     cpu->sp = fr->sp;
+    cpu->apps_run_count++;
     uart_line("--- app:done ---");
     drain_appq(cpu);
 }
@@ -330,6 +333,45 @@ static void run_all_apps(CPU *cpu) {
     }
     if (cpu->appq_n == 0) uart_line("apps: (none)");
     else drain_appq(cpu);
+}
+
+
+static int sense_circumstances(CPU *cpu) {
+    int n = 0;
+    uint32_t used = cpu->img.code_len;
+    for (uint16_t i = 0; i < cpu->img.file_count; i++) {
+        used += cpu->img.files[i].len;
+        if (ends_with_app(cpu->img.files[i].name)) n++;
+    }
+    uint32_t mem = (uint32_t)cpu->img.mem_kb * 1024u;
+    uint32_t freeb = mem > used ? mem - used : 0;
+    int ran = cpu->apps_run_count;
+    int mode;
+    const char *reason;
+    if (n == 0) {
+        mode = 0; reason = "no apps → idle";
+    } else if (ran == 0) {
+        if (n >= 3 || freeb < 35000u) {
+            mode = 2; reason = "heavy load/mem pressure → chameleon";
+        } else {
+            mode = 1; reason = "light load → universal";
+        }
+    } else if (ran < n) {
+        mode = 2; reason = "unseen apps remain → chameleon";
+    } else if (cpu->adapt_mode >= 2 && !cpu->chameleon_followup_done) {
+        cpu->chameleon_followup_done = 1;
+        mode = 2; reason = "chameleon follow-up pass under prior load";
+    } else {
+        mode = 0; reason = "circumstances settled";
+    }
+    {
+        char line[160];
+        snprintf(line, sizeof(line),
+                 "sense: apps=%d free=%u ran=%d → mode=%d (%s)",
+                 n, freeb, ran, mode, reason);
+        uart_line(line);
+    }
+    return mode;
 }
 
 static void boot_banner(CPU *cpu) {
@@ -506,12 +548,16 @@ static int step(CPU *cpu) {
     case 0x26: {
         int32_t mode = pop(cpu);
         cpu->adapt_mode = (int)mode;
-        const char *lab = mode == 0 ? "off" : mode == 1 ? "universal" : mode == 2 ? "chameleon" : "custom";
-        char line[96];
-        snprintf(line, sizeof(line), "adapt: mode=%d (%s)", cpu->adapt_mode, lab);
+        const char *lab = mode == 0 ? "settle/idle" : mode == 1 ? "universal" : mode == 2 ? "chameleon" : "custom";
+        char line[128];
+        snprintf(line, sizeof(line), "adapt: mode=%d (%s) [from circumstances]", cpu->adapt_mode, lab);
         uart_line(line);
         if (cpu->adapt_mode >= 2)
-            uart_line("adapt: chameleon armed — will re-scan apps");
+            uart_line("adapt: chameleon armed — phases follow circumstances");
+        return !cpu->halted;
+    }
+    case 0x27: {
+        push(cpu, sense_circumstances(cpu));
         return !cpu->halted;
     }
     default:

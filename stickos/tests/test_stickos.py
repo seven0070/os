@@ -54,8 +54,9 @@ class TestIndependence(unittest.TestCase):
         self.assertEqual(assert_uart_autonomous(log.uart_lines), [])
         joined = "\n".join(log.uart_lines)
         self.assertIn("runall:", joined)
-        self.assertIn("adapt: mode=1", joined)
-        self.assertIn("adapt: mode=2", joined)
+        self.assertIn("sense:", joined)
+        self.assertIn("adapt: mode=", joined)
+        self.assertIn("from circumstances", joined)
 
 
 class TestUniversal(unittest.TestCase):
@@ -68,7 +69,33 @@ class TestUniversal(unittest.TestCase):
         joined = "\n".join(r.output)
         self.assertIn("--- app:hello.app ---", joined)
         self.assertIn("APP hello-world", joined)
-        self.assertIn("StickOS ready — adapted.", joined)
+        self.assertIn("phases adapted to circumstances", joined)
+
+    def test_sense_picks_light_vs_heavy(self):
+        from stickos.apps import compile_app_source
+        from stickos.image import build_image
+
+        light_src = """
+sense
+dup
+adapt
+halt
+"""
+        img = build_image(
+            light_src,
+            files={"a.app": compile_app_source('says "x"\nhalt\n')},
+        )
+        r = StickVM(img).run()
+        self.assertTrue(r.ok)
+        self.assertTrue(any("light load → universal" in x for x in r.output))
+
+        files = {
+            f"a{i}.app": compile_app_source(f'says "m{i}"\nhalt\n') for i in range(4)
+        }
+        img2 = build_image(light_src, files=files)
+        r2 = StickVM(img2).run()
+        self.assertTrue(r2.ok)
+        self.assertTrue(any("heavy load" in x for x in r2.output))
 
 
 if __name__ == "__main__":

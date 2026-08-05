@@ -1,7 +1,8 @@
-# StickOS kernel — universal + adaptable
+# StickOS kernel — phases adapt according to circumstances (sense → adapt → run)
+
 sys
 says "welcome to StickOS — kilobyte pendrive OS"
-says "language: SAY — runs any .app; adapts on demand"
+says "language: SAY — phases adapt to circumstances"
 
 put 0
 set sum
@@ -27,15 +28,29 @@ jz fail
 
 says "self-test: PASS (sum 1..4 = 10)"
 list
-put 1
+
+# Circumstance-driven phases (not a fixed 1→2 script)
+says "sensing circumstances..."
+sense
+dup
 adapt
+put 0
+eq
+jnz settle
 runall
-says "universal pass complete"
-put 2
+
+# Re-sense: chameleon/heavy load may demand another phase
+sense
+dup
 adapt
+put 0
+eq
+jnz settle
 runall
-says "StickOS ready — adapted."
-halt
+
+settle:
+  says "StickOS ready — phases adapted to circumstances."
+  halt
 
 fail:
   says "self-test: FAIL"
