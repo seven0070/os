@@ -1,0 +1,89 @@
+StickOS independence proof
+==========================
+Host role: USB VBUS (5V) power supply only.
+Execution: StickCPU firmware (native/stickcpu)
+ROM: native/stickos.stk (756 bytes)
+exit_code: 0
+powered_ms: 0.58
+
+UART transcript:
+[StickOS] v1  mem=64KB
+stick: 7 files  code=87B
+--- boot ---
+POWER: VBUS only — StickCPU autonomous
+StickOS/1 SAY-native pendrive  image~64KB arena
+welcome to StickOS — kilobyte pendrive OS
+language: SAY — phases adapt to circumstances
+self-test: PASS (sum 1..4 = 10)
+files: branch.app, count.app, countdown.app, hello.app, hello.txt, late.app, product.app
+sensing circumstances...
+sense: apps=6 free=65114 ran=0 → mode=2 (heavy load/mem pressure → chameleon)
+adapt: mode=2 (chameleon) [from circumstances]
+adapt: chameleon armed — phases follow circumstances
+runall: 6 apps (adapt=2)
+--- app:branch.app ---
+APP branch: yes
+--- app:done ---
+--- app:count.app ---
+1
+2
+3
+4
+5
+counted.
+--- app:done ---
+--- app:countdown.app ---
+3
+2
+1
+APP countdown done
+--- app:done ---
+--- app:hello.app ---
+APP hello-world
+7+6=
+13
+--- app:done ---
+--- app:late.app ---
+ADAPT-LATE
+99
+--- app:done ---
+--- app:product.app ---
+1*2*3*4*5 =
+120
+--- app:done ---
+sense: apps=6 free=65114 ran=6 → mode=2 (chameleon follow-up pass under prior load)
+adapt: mode=2 (chameleon) [from circumstances]
+adapt: chameleon armed — phases follow circumstances
+runall: 6 apps (adapt=2)
+--- app:branch.app ---
+APP branch: yes
+--- app:done ---
+--- app:count.app ---
+1
+2
+3
+4
+5
+counted.
+--- app:done ---
+--- app:countdown.app ---
+3
+2
+1
+APP countdown done
+--- app:done ---
+--- app:hello.app ---
+APP hello-world
+7+6=
+13
+--- app:done ---
+--- app:late.app ---
+ADAPT-LATE
+99
+--- app:done ---
+--- app:product.app ---
+1*2*3*4*5 =
+120
+--- app:done ---
+StickOS ready — phases adapted to circumstances.
+--- halt: halt (428 ticks) ---

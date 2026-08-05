@@ -1,0 +1,4 @@
+says "ADAPT-LATE"
+put 99
+say
+halt

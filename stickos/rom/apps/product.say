@@ -1,0 +1,22 @@
+# factorial-ish product 1*2*3*4*5
+put 1
+set p
+put 1
+set i
+loop:
+  get p
+  get i
+  mul
+  set p
+  get i
+  put 1
+  add
+  set i
+  get i
+  put 5
+  le
+  jnz loop
+says "1*2*3*4*5 ="
+get p
+say
+halt

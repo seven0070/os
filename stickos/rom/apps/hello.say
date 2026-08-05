@@ -1,0 +1,8 @@
+# hello marker app — proves arbitrary programs run
+says "APP hello-world"
+put 7
+put 6
+add
+says "7+6="
+say
+halt

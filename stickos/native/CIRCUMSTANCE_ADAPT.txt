@@ -1,0 +1,6 @@
+StickOS circumstance-driven phases
+round=1
+heavy → chameleon (mode 2 + follow-up)
+light → universal (mode 1) then settle
+empty → idle (mode 0)
+PASS

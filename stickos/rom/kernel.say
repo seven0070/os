@@ -1,0 +1,57 @@
+# StickOS kernel — phases adapt according to circumstances (sense → adapt → run)
+
+sys
+says "welcome to StickOS — kilobyte pendrive OS"
+says "language: SAY — phases adapt to circumstances"
+
+put 0
+set sum
+put 1
+set i
+test:
+  get sum
+  get i
+  add
+  set sum
+  get i
+  put 1
+  add
+  set i
+  get i
+  put 4
+  le
+  jnz test
+get sum
+put 10
+eq
+jz fail
+
+says "self-test: PASS (sum 1..4 = 10)"
+list
+
+# Circumstance-driven phases (not a fixed 1→2 script)
+says "sensing circumstances..."
+sense
+dup
+adapt
+put 0
+eq
+jnz settle
+runall
+
+# Re-sense: chameleon/heavy load may demand another phase
+sense
+dup
+adapt
+put 0
+eq
+jnz settle
+runall
+
+settle:
+  says "StickOS ready — phases adapted to circumstances."
+  halt
+
+fail:
+  says "self-test: FAIL"
+  halt

@@ -1,0 +1,16 @@
+# countdown app
+put 3
+set n
+loop:
+  get n
+  say
+  get n
+  put 1
+  sub
+  set n
+  get n
+  put 0
+  gt
+  jnz loop
+says "APP countdown done"
+halt
