@@ -1,0 +1,45 @@
+# StickOS kernel — written in SAY (English-word native language)
+# Boots the pendrive, greets, runs a tiny self-test, lists stick files.
+
+sys
+says "welcome to StickOS — kilobyte pendrive OS"
+says "language: SAY (english words -> 1-byte ops)"
+
+# self-test: 1+2+3+4 = 10
+put 0
+set sum
+put 1
+set i
+test:
+  get sum
+  get i
+  add
+  set sum
+  get i
+  put 1
+  add
+  set i
+  get i
+  put 4
+  le
+  jnz test
+
+get sum
+put 10
+eq
+jz fail
+
+says "self-test: PASS (sum 1..4 = 10)"
+list
+mem
+says "bytes free on stick arena:"
+say
+tick
+says "boot ticks so far:"
+say
+says "StickOS ready."
+halt
+
+fail:
+  says "self-test: FAIL"
+  halt
