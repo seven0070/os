@@ -1,0 +1,24 @@
+StickOS independence proof
+==========================
+Host role: USB VBUS (5V) power supply only.
+Execution: StickCPU firmware (native/stickcpu)
+ROM: native/stickos.stk (342 bytes)
+exit_code: 0
+powered_ms: 0.55
+
+UART transcript:
+[StickOS] v1  mem=64KB
+stick: 1 files  code=72B
+--- boot ---
+POWER: VBUS only — StickCPU autonomous
+StickOS/1 SAY-native pendrive  image~64KB arena
+welcome to StickOS — kilobyte pendrive OS
+language: SAY (english words -> 1-byte ops)
+self-test: PASS (sum 1..4 = 10)
+files: hello.txt
+bytes free on stick arena:
+65432
+boot ticks so far:
+65
+StickOS ready.
+--- halt: halt (69 ticks) ---

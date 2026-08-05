@@ -38,13 +38,31 @@ halt
 
 Words include: `put`, `set`, `get`, `say`, `says`, `add`, `sub`, `mul`, `div`, `less`, `le`, `jz`, `jnz`, `list`, `mem`, `tick`, `sys`, `halt`, …
 
-## Simulate
+## Independence (host = power only)
+
+StickOS is meant to run on **StickCPU** inside the pendrive. The host USB port
+supplies **VBUS (5V) only**. Host Python must not interpret opcodes at run time.
+
+```bash
+python3 run_independent.py
+```
+
+That loop:
+1. Flashes `stickos.stk` into StickCPU firmware (`native/stickcpu`)
+2. Purges host-side interpreters from the process
+3. Applies VBUS via the USB power bench (starts firmware; no stdin programs)
+4. Passively sniffs UART TX and audits that autonomy held
+
+Proof artifact: `stickos/native/INDEPENDENCE.txt`
+
+## Host-side simulator (dev only)
 
 ```bash
 python3 run_stickos.py
 ```
 
-Builds the native image, boots the kernel, runs demos, reloads the image from disk, and loops until everything passes and size stays in the kilobyte class.
+Builds the native image and runs the Python VM (for development). The
+independent path above is the real operating contract.
 
 ```bash
 python3 run_stickos.py --build-only   # only emit stickos.stk
@@ -55,14 +73,19 @@ python3 -m stickos.simulate --once    # single round
 
 ```
 stickos/
-  opcodes.py      # 1-byte ISA
-  say_compile.py  # English → bytecode
-  vm.py           # pendrive VM + .stk image format
-  image.py        # ROM → native image
-  simulate.py     # boot until done
-  rom/kernel.say  # boot program
-  demos/          # sample SAY programs
-  native/         # built stickos.stk
+  opcodes.py              # 1-byte ISA
+  say_compile.py          # English → bytecode
+  vm.py                   # host-side VM (dev only)
+  image.py                # ROM → .stk
+  silicon/stickos_fw.c    # StickCPU firmware (real runtime)
+  silicon/build_fw.py     # flash .stk + gcc
+  bench/power.py          # USB VBUS bench (power only)
+  bench/independence.py   # autonomy audits
+  simulate_independent.py # VBUS-only loop until proven
+  rom/kernel.say          # boot program
+  demos/                  # sample SAY programs
+  native/stickos.stk      # kilobyte ROM image
+  native/stickcpu         # StickCPU firmware binary
 ```
 
 ## Image format (`STK1`)

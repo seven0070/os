@@ -37,5 +37,22 @@ class TestSay(unittest.TestCase):
         self.assertIn("120", r.output)
 
 
+class TestIndependence(unittest.TestCase):
+    def test_bench_imports_are_power_only(self):
+        from stickos.bench.independence import audit_bench_source
+
+        self.assertEqual(audit_bench_source(), [])
+
+    def test_vbus_only_boot(self):
+        from stickos.bench.independence import assert_uart_autonomous
+        from stickos.bench.power import UsbPowerBench
+        from stickos.silicon.build_fw import build
+
+        fw = build()
+        log = UsbPowerBench(firmware=fw).apply_vbus()
+        self.assertEqual(log.exit_code, 0)
+        self.assertEqual(assert_uart_autonomous(log.uart_lines), [])
+
+
 if __name__ == "__main__":
     unittest.main()
