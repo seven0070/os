@@ -100,6 +100,18 @@ class VMResult:
     stack: list[int]
 
 
+@dataclass
+class _Frame:
+    """Saved host state while a guest .app runs."""
+
+    code: bytes
+    strings: list[str]
+    pc: int
+    vars: list[int]
+    call: list[int]
+    stack: list[int]
+
+
 class StickVM:
     """Kilobyte StickOS machine."""
 
@@ -118,6 +130,10 @@ class StickVM:
         self.output: list[str] = []
         self._on_line = on_line
         self.mem_bytes = image.mem_kb * 1024
+        self.frames: list[_Frame] = []
+        self.adapt_mode = 0  # 0 off, 1 universal, 2 chameleon
+        self.apps_run: list[str] = []
+        self._app_queue: list[str] = []
 
     def _emit(self, line: str) -> None:
         self.output.append(line)
@@ -139,10 +155,72 @@ class StickVM:
         self._emit(f"stick: {len(self.files)} files  code={len(self.code)}B")
         self._emit("--- boot ---")
 
+    def _enter_app(self, name: str, code: bytes, strings: list[str]) -> None:
+        if len(self.frames) >= 8:
+            raise RuntimeError("app nest too deep")
+        self.frames.append(
+            _Frame(
+                code=self.code,
+                strings=self.strings,
+                pc=self.pc,
+                vars=self.vars,
+                call=self.call,
+                stack=self.stack,
+            )
+        )
+        self.code = code
+        self.strings = strings
+        self.pc = 0
+        self.vars = [0] * VAR_SLOTS
+        self.call = []
+        self.stack = []
+        self.apps_run.append(name)
+        self._emit(f"--- app:{name} ---")
+
+    def _leave_app(self) -> None:
+        fr = self.frames.pop()
+        self.code = fr.code
+        self.strings = fr.strings
+        self.pc = fr.pc
+        self.vars = fr.vars
+        self.call = fr.call
+        self.stack = fr.stack
+        self._emit("--- app:done ---")
+
+    def _run_named_app(self, name: str) -> None:
+        from .apps import unpack_app
+
+        data = self.files.get(name)
+        if data is None:
+            self._emit(f"app missing: {name}")
+            return
+        code, strings = unpack_app(data)
+        self._enter_app(name, code, strings)
+
+    def _run_all_apps(self) -> None:
+        names = sorted(n for n in self.files if n.endswith(".app"))
+        if not names:
+            self._emit("apps: (none)")
+            return
+        if self._app_queue:
+            return
+        self._app_queue = list(names)
+        self._emit(f"runall: {len(names)} apps (adapt={self.adapt_mode})")
+        self._drain_app_queue()
+
+    def _drain_app_queue(self) -> None:
+        if not self._app_queue or self.frames:
+            return
+        name = self._app_queue.pop(0)
+        self._run_named_app(name)
     def step(self) -> bool:
         if self.halted:
             return False
         if self.pc < 0 or self.pc >= len(self.code):
+            if self.frames:
+                self._leave_app()
+                self._drain_app_queue()
+                return True
             self.halted = True
             self.halt_reason = "pc out of range"
             return False
@@ -152,6 +230,10 @@ class StickVM:
         self.ticks += 1
 
         if op == 0x00:  # HALT
+            if self.frames:
+                self._leave_app()
+                self._drain_app_queue()
+                return True
             self.halted = True
             self.halt_reason = "halt"
             return False
@@ -320,6 +402,24 @@ class StickVM:
                 f"StickOS/{self.image.version} SAY-native pendrive  "
                 f"image~{self.image.mem_kb}KB arena"
             )
+            return True
+        if op == 0x24:  # RUN
+            idx = struct.unpack_from("<H", self.code, self.pc)[0]
+            self.pc += 2
+            if idx >= len(self.strings):
+                raise RuntimeError(f"bad string index {idx}")
+            self._run_named_app(self.strings[idx])
+            return True
+        if op == 0x25:  # RUNALL
+            self._run_all_apps()
+            return True
+        if op == 0x26:  # ADAPT
+            mode = self._pop()
+            self.adapt_mode = int(mode)
+            labels = {0: "off", 1: "universal", 2: "chameleon"}
+            self._emit(f"adapt: mode={self.adapt_mode} ({labels.get(self.adapt_mode, 'custom')})")
+            if self.adapt_mode >= 2:
+                self._emit("adapt: chameleon armed — will re-scan apps")
             return True
 
         raise RuntimeError(f"illegal opcode 0x{op:02x} at {self.pc - 1}")

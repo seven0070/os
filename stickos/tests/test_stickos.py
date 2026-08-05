@@ -52,6 +52,23 @@ class TestIndependence(unittest.TestCase):
         log = UsbPowerBench(firmware=fw).apply_vbus()
         self.assertEqual(log.exit_code, 0)
         self.assertEqual(assert_uart_autonomous(log.uart_lines), [])
+        joined = "\n".join(log.uart_lines)
+        self.assertIn("runall:", joined)
+        self.assertIn("adapt: mode=1", joined)
+        self.assertIn("adapt: mode=2", joined)
+
+
+class TestUniversal(unittest.TestCase):
+    def test_runall_executes_rom_apps(self):
+        from stickos.image import build_from_rom
+
+        img, _ = build_from_rom(PKG / "rom")
+        r = StickVM(img).run(max_ticks=500_000)
+        self.assertTrue(r.ok)
+        joined = "\n".join(r.output)
+        self.assertIn("--- app:hello.app ---", joined)
+        self.assertIn("APP hello-world", joined)
+        self.assertIn("StickOS ready — adapted.", joined)
 
 
 if __name__ == "__main__":

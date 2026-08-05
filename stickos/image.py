@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from .apps import load_apps_dir
 from .say_compile import compile_say
 from .vm import StickImage
 
@@ -30,14 +31,20 @@ def build_image(
     )
 
 
-def build_from_rom(rom_dir: Path, out_path: Path | None = None) -> tuple[StickImage, bytes]:
-    kernel = (rom_dir / "kernel.say").read_text(encoding="utf-8")
+def collect_rom_files(rom_dir: Path) -> dict[str, bytes]:
     files: dict[str, bytes] = {}
-    demos = rom_dir / "files"
-    if demos.is_dir():
-        for p in demos.iterdir():
+    data_dir = rom_dir / "files"
+    if data_dir.is_dir():
+        for p in data_dir.iterdir():
             if p.is_file():
                 files[p.name] = p.read_bytes()
+    files.update(load_apps_dir(rom_dir / "apps"))
+    return files
+
+
+def build_from_rom(rom_dir: Path, out_path: Path | None = None) -> tuple[StickImage, bytes]:
+    kernel = (rom_dir / "kernel.say").read_text(encoding="utf-8")
+    files = collect_rom_files(rom_dir)
     img = build_image(kernel, files=files, mem_kb=64, version=1)
     blob = img.to_bytes()
     if out_path:

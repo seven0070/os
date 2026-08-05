@@ -38,7 +38,18 @@ halt
 
 Words include: `put`, `set`, `get`, `say`, `says`, `add`, `sub`, `mul`, `div`, `less`, `le`, `jz`, `jnz`, `list`, `mem`, `tick`, `sys`, `halt`, …
 
-## Independence (host = power only)
+## Run anything + adapt
+
+Drop any `.say` program into `stickos/rom/apps/`. On boot StickOS compiles them to
+`.app` blobs, enters **universal** mode (`adapt 1` + `runall`), then **chameleon**
+mode (`adapt 2` + `runall` again) so newly added apps are picked up.
+
+```bash
+python3 run_anything.py
+```
+
+New opcodes: `run "x.app"`, `runall`, `adapt`.
+
 
 StickOS is meant to run on **StickCPU** inside the pendrive. The host USB port
 supplies **VBUS (5V) only**. Host Python must not interpret opcodes at run time.

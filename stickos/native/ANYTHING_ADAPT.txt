@@ -1,0 +1,6 @@
+StickOS anything + adapt proof
+round=1
+apps_in_image=14
+image_bytes=872
+phase_a=PASS (run any stick app)
+phase_b=PASS (adaptable chameleon after)

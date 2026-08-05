@@ -2,23 +2,85 @@ StickOS independence proof
 ==========================
 Host role: USB VBUS (5V) power supply only.
 Execution: StickCPU firmware (native/stickcpu)
-ROM: native/stickos.stk (342 bytes)
+ROM: native/stickos.stk (721 bytes)
 exit_code: 0
-powered_ms: 0.55
+powered_ms: 0.59
 
 UART transcript:
 [StickOS] v1  mem=64KB
-stick: 1 files  code=72B
+stick: 7 files  code=75B
 --- boot ---
 POWER: VBUS only — StickCPU autonomous
 StickOS/1 SAY-native pendrive  image~64KB arena
 welcome to StickOS — kilobyte pendrive OS
-language: SAY (english words -> 1-byte ops)
+language: SAY — runs any .app; adapts on demand
 self-test: PASS (sum 1..4 = 10)
-files: hello.txt
-bytes free on stick arena:
-65432
-boot ticks so far:
-65
-StickOS ready.
---- halt: halt (69 ticks) ---
+files: branch.app, count.app, countdown.app, hello.app, hello.txt, late.app, product.app
+adapt: mode=1 (universal)
+runall: 6 apps (adapt=1)
+--- app:branch.app ---
+APP branch: yes
+--- app:done ---
+--- app:count.app ---
+1
+2
+3
+4
+5
+counted.
+--- app:done ---
+--- app:countdown.app ---
+3
+2
+1
+APP countdown done
+--- app:done ---
+--- app:hello.app ---
+APP hello-world
+7+6=
+13
+--- app:done ---
+--- app:late.app ---
+ADAPT-LATE
+99
+--- app:done ---
+--- app:product.app ---
+1*2*3*4*5 =
+120
+--- app:done ---
+universal pass complete
+adapt: mode=2 (chameleon)
+adapt: chameleon armed — will re-scan apps
+runall: 6 apps (adapt=2)
+--- app:branch.app ---
+APP branch: yes
+--- app:done ---
+--- app:count.app ---
+1
+2
+3
+4
+5
+counted.
+--- app:done ---
+--- app:countdown.app ---
+3
+2
+1
+APP countdown done
+--- app:done ---
+--- app:hello.app ---
+APP hello-world
+7+6=
+13
+--- app:done ---
+--- app:late.app ---
+ADAPT-LATE
+99
+--- app:done ---
+--- app:product.app ---
+1*2*3*4*5 =
+120
+--- app:done ---
+StickOS ready — adapted.
+--- halt: halt (420 ticks) ---

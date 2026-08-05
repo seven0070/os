@@ -6,7 +6,7 @@ from __future__ import annotations
 OPS: dict[str, int] = {
     "HALT": 0x00,
     "NOP": 0x01,
-    "PUSH": 0x02,   # u16 immediate follows
+    "PUSH": 0x02,  # i16 immediate follows
     "POP": 0x03,
     "DUP": 0x04,
     "SWAP": 0x05,
@@ -26,20 +26,23 @@ OPS: dict[str, int] = {
     "AND": 0x13,
     "OR": 0x14,
     "STORE": 0x15,  # u8 slot
-    "LOAD": 0x16,   # u8 slot
-    "SAY": 0x17,    # print top (number) or string ref
-    "SAYS": 0x18,   # print string: u16 offset into string table
-    "JMP": 0x19,    # i16 relative
-    "JZ": 0x1A,     # i16 relative (pop)
-    "JNZ": 0x1B,    # i16 relative (pop)
-    "CALL": 0x1C,   # u16 abs
+    "LOAD": 0x16,  # u8 slot
+    "SAY": 0x17,
+    "SAYS": 0x18,  # u16 string idx
+    "JMP": 0x19,  # i16 relative
+    "JZ": 0x1A,
+    "JNZ": 0x1B,
+    "CALL": 0x1C,  # u16 abs
     "RET": 0x1D,
-    "READ": 0x1E,   # read file name from string table -> push handle/status
-    "WRITE": 0x1F,  # write stick file
-    "LIST": 0x20,   # list stick files
-    "MEM": 0x21,    # push free memory estimate
-    "TICK": 0x22,   # push tick counter
-    "SYS": 0x23,    # system info banner
+    "READ": 0x1E,
+    "WRITE": 0x1F,
+    "LIST": 0x20,
+    "MEM": 0x21,
+    "TICK": 0x22,
+    "SYS": 0x23,
+    "RUN": 0x24,  # u16 string idx → run .app
+    "RUNALL": 0x25,  # run every *.app
+    "ADAPT": 0x26,  # pop mode (0/1/2)
 }
 
 OP_NAME = {v: k for k, v in OPS.items()}
@@ -97,4 +100,7 @@ ENGLISH: dict[str, str] = {
     "tick": "TICK",
     "sys": "SYS",
     "hello": "SYS",
+    "run": "RUN",
+    "runall": "RUNALL",
+    "adapt": "ADAPT",
 }

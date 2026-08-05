@@ -1,0 +1,12 @@
+# branchy logic app
+put 3
+set x
+get x
+put 3
+eq
+jz no
+says "APP branch: yes"
+halt
+no:
+  says "APP branch: no"
+  halt

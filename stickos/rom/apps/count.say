@@ -1,0 +1,16 @@
+# count 1..5 in SAY
+put 1
+set n
+loop:
+  get n
+  say
+  get n
+  put 1
+  add
+  set n
+  get n
+  put 5
+  le
+  jnz loop
+says "counted."
+halt

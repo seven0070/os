@@ -128,6 +128,13 @@ def compile_say(source: str) -> CompileResult:
                 i += 2
                 continue
 
+            # sugar: run "app.app"
+            if w == "run" and i + 1 < len(parts) and parts[i + 1].startswith('"'):
+                text = _unescape(parts[i + 1][1:-1])
+                tokens.append(("op", "RUN", str_of(text)))
+                i += 2
+                continue
+
             # sugar: put N / push N
             if w in ("put", "push") and i + 1 < len(parts) and _NUM.match(parts[i + 1]):
                 tokens.append(("op", "PUSH", int(parts[i + 1])))
@@ -169,7 +176,7 @@ def compile_say(source: str) -> CompileResult:
             return 3
         if op in ("STORE", "LOAD"):
             return 2
-        if op == "SAYS":
+        if op in ("SAYS", "RUN"):
             return 3
         if op in ("JMP", "JZ", "JNZ"):
             return 3
@@ -197,7 +204,7 @@ def compile_say(source: str) -> CompileResult:
         elif op in ("STORE", "LOAD"):
             out.append(code)
             out.append(int(tok[2]) & 0xFF)
-        elif op == "SAYS":
+        elif op in ("SAYS", "RUN"):
             out.append(code)
             out += struct.pack("<H", int(tok[2]))
         elif op in ("JMP", "JZ", "JNZ"):
