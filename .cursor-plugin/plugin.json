@@ -1,0 +1,6 @@
+{
+  "name": "praisonai",
+  "description": "Build and run PraisonAI agents, multi-agent teams, workflows, MCP tools, RAG, and YAML/CLI apps.",
+  "version": "1.0.0",
+  "author": { "name": "Sanath S Patil" }
+}
